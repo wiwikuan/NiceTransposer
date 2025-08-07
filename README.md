@@ -6,6 +6,8 @@
 
 純 HTML + CSS + JavaScript，沒有任何外部依賴套件。只有 17 KB，離線使用也 OK！
 
+馬上用：https://nicechord.com/transpose/
+
 ### 怎麼用？
 
 1. 把包含音名或和弦的文字貼到輸入框
