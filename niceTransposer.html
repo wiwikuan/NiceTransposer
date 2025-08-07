@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不囉唆的文字移調器 by NiceChord 好和弦</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            line-height: 1.2;
+        }
+        
+        .controls {
+            margin: 5px 0;
+        }
+        
+        .button-row {
+            margin: 2px 0;
+        }
+        
+        .button-row h3 {
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+        
+        button {
+            margin: 2px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .content {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .text-area {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        h4 {
+            margin: 5px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            button {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h3>不囉唆的文字移調器 by <a href="https://nicechord.com">NiceChord 好和弦</a></h3>
+    
+    <div class="controls">
+        <div class="button-row">
+            <h4>移高：</h4>
+            <button onclick="transpose(1, '增一度')">增一度</button>
+            <button onclick="transpose(0, '減二度')">減二度</button>
+            <button onclick="transpose(1, '小二度')">小二度</button>
+            <button onclick="transpose(2, '大二度')">大二度</button>
+            <button onclick="transpose(3, '增二度')">增二度</button>
+            <button onclick="transpose(2, '減三度')">減三度</button>
+            <button onclick="transpose(3, '小三度')">小三度</button>
+            <button onclick="transpose(4, '大三度')">大三度</button>
+            <button onclick="transpose(5, '增三度')">增三度</button>
+            <button onclick="transpose(4, '減四度')">減四度</button>
+            <button onclick="transpose(5, '完全四度')">完全四度</button>
+            <button onclick="transpose(6, '增四度')">增四度</button>
+            <button onclick="transpose(6, '減五度')">減五度</button>
+            <button onclick="transpose(7, '完全五度')">完全五度</button>
+            <button onclick="transpose(8, '增五度')">增五度</button>
+            <button onclick="transpose(7, '減六度')">減六度</button>
+            <button onclick="transpose(8, '小六度')">小六度</button>
+            <button onclick="transpose(9, '大六度')">大六度</button>
+            <button onclick="transpose(10, '增六度')">增六度</button>
+            <button onclick="transpose(9, '減七度')">減七度</button>
+            <button onclick="transpose(10, '小七度')">小七度</button>
+            <button onclick="transpose(11, '大七度')">大七度</button>
+            <button onclick="transpose(12, '增七度')">增七度</button>
+            <button onclick="transpose(11, '減八度')">減八度</button>
+        </div>
+        
+        <div class="button-row">
+            <h4>移低：</h4>
+            <button onclick="transpose(-1, '增一度')">增一度</button>
+            <button onclick="transpose(0, '減二度')">減二度</button>
+            <button onclick="transpose(-1, '小二度')">小二度</button>
+            <button onclick="transpose(-2, '大二度')">大二度</button>
+            <button onclick="transpose(-3, '增二度')">增二度</button>
+            <button onclick="transpose(-2, '減三度')">減三度</button>
+            <button onclick="transpose(-3, '小三度')">小三度</button>
+            <button onclick="transpose(-4, '大三度')">大三度</button>
+            <button onclick="transpose(-5, '增三度')">增三度</button>
+            <button onclick="transpose(-4, '減四度')">減四度</button>
+            <button onclick="transpose(-5, '完全四度')">完全四度</button>
+            <button onclick="transpose(-6, '增四度')">增四度</button>
+            <button onclick="transpose(-6, '減五度')">減五度</button>
+            <button onclick="transpose(-7, '完全五度')">完全五度</button>
+            <button onclick="transpose(-8, '增五度')">增五度</button>
+            <button onclick="transpose(-7, '減六度')">減六度</button>
+            <button onclick="transpose(-8, '小六度')">小六度</button>
+            <button onclick="transpose(-9, '大六度')">大六度</button>
+            <button onclick="transpose(-10, '增六度')">增六度</button>
+            <button onclick="transpose(-9, '減七度')">減七度</button>
+            <button onclick="transpose(-10, '小七度')">小七度</button>
+            <button onclick="transpose(-11, '大七度')">大七度</button>
+            <button onclick="transpose(-12, '增七度')">增七度</button>
+            <button onclick="transpose(-11, '減八度')">減八度</button>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="text-area">
+            <h4>原始文字：</h4>
+            <textarea id="input" placeholder="請輸入包含音名或和弦代號的文字，中間用空白分隔。例如：&#10;&#10;C C G G A A G&#10;&#10;或&#10;&#10;Cmaj7 | Am7 | Fmaj7 | G9sus | C(add2) ||"></textarea>
+        </div>
+        
+        <div class="text-area">
+            <h4>移調結果：</h4>
+            <textarea id="output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        // ===== 音名基礎資料定義 =====
+        
+        // 七個基本音名字母，按照音階順序排列
+        const noteLetters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        
+        // 將基本音名字母對應到半音數值（以 C 為 0 基準）
+        // C=0, D=2, E=4, F=5, G=7, A=9, B=11
+        const noteToSemitone = {
+            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+        };
+        
+        // ===== 音名解析函數 =====
+        
+        /**
+         * 解析音名字串，將其拆解為字母、修飾符和半音數值
+         * @param {string} noteStr - 音名字串，例如 "C#", "Bb", "F##" 等
+         * @returns {object|null} - 包含 letter（字母）、modifier（修飾符）、semitone（半音數值）的物件，若無效則回傳 null
+         */
+        function parseNote(noteStr) {
+            // 將輸入的 x（重升記號）轉換為 ##（雙升記號），統一使用 ## 格式
+            noteStr = noteStr.replace(/x/g, '##');
+            
+            // 提取第一個字元作為音名字母
+            const letter = noteStr[0];
+            // 提取第一個字元之後的所有字元作為修飾符（升降記號）
+            const modifier = noteStr.slice(1);
+            
+            // 檢查字母是否為有效的音名字母（A-G）
+            if (!noteLetters.includes(letter)) {
+                return null; // 無效音名，回傳 null
+            }
+            
+            // 計算修飾符對半音數的影響
+            // 每個 # 代表升半音（+1），每個 b 代表降半音（-1）
+            let modifierValue = 0;
+            for (let char of modifier) {
+                if (char === '#') modifierValue += 1;      // 升記號：+1 半音
+                else if (char === 'b') modifierValue -= 1; // 降記號：-1 半音
+            }
+            
+            // 回傳解析結果
+            return {
+                letter: letter,                    // 音名字母
+                modifier: modifier,                // 修飾符字串
+                semitone: (noteToSemitone[letter] + modifierValue + 12) % 12  // 最終半音數值（0-11）
+            };
+        }
+        
+        // ===== 目標字母計算函數 =====
+        
+        /**
+         * 根據起始字母、音程類型和方向，計算目標音名字母
+         * @param {string} fromLetter - 起始音名字母（A-G）
+         * @param {string} intervalType - 音程類型，例如 "大三度"、"完全五度" 等
+         * @param {number} direction - 方向（1 為向上，-1 為向下）
+         * @returns {string} - 目標音名字母
+         */
+        function getTargetLetter(fromLetter, intervalType, direction) {
+            // 找到起始字母在 noteLetters 陣列中的索引位置
+            const letterIndex = noteLetters.indexOf(fromLetter);
+            let steps; // 字母距離（度數-1）
+            
+            // 根據音程類型決定字母之間的距離
+            // 注意：度數是音名字母之間的距離，例如 C 到 E 是三度（相距2個字母位置）
+            switch(intervalType) {
+                case '增一度': steps = 0; break;  // 同一個字母
+                case '減二度': case '小二度': case '大二度': case '增二度': steps = 1; break;  // 相鄰字母
+                case '減三度': case '小三度': case '大三度': case '增三度': steps = 2; break;  // 相距2個字母
+                case '減四度': case '完全四度': case '增四度': steps = 3; break;  // 相距3個字母
+                case '減五度': case '完全五度': case '增五度': steps = 4; break;  // 相距4個字母
+                case '減六度': case '小六度': case '大六度': case '增六度': steps = 5; break;  // 相距5個字母
+                case '減七度': case '小七度': case '大七度': case '增七度': steps = 6; break;  // 相距6個字母
+                case '減八度': steps = 7; break;  // 八度（回到同一字母但在不同八度）
+                default: steps = 0;
+            }
+            
+            // 根據移調方向調整字母距離
+            if (direction < 0) {
+                if (intervalType === '減八度') {
+                    steps = 7; // 減八度向下就是7個字母距離（一個完整八度）
+                } else {
+                    // 向下移調時，不需要特別調整 steps，
+                    // 因為我們會在下面的計算中使用 direction 來處理方向
+                }
+            }
+            
+            // 計算目標字母的索引位置
+            // 使用 (index + offset + 7) % 7 來處理負數的模運算
+            // +7 是為了確保結果不會是負數
+            const targetIndex = (letterIndex + steps * direction + 7) % 7;
+            
+            // 回傳目標字母
+            return noteLetters[targetIndex];
+        }
+        
+        // ===== 修飾符計算函數 =====
+        
+        /**
+         * 根據目標字母和目標半音數，計算需要的修飾符（升降記號）
+         * @param {string} targetLetter - 目標音名字母
+         * @param {number} targetSemitone - 目標半音數值（0-11）
+         * @returns {string} - 修飾符字串，例如 "#", "bb", "###" 等
+         */
+        function calculateModifier(targetLetter, targetSemitone) {
+            // 取得目標字母的基本半音數值（不含修飾符）
+            const baseSemitone = noteToSemitone[targetLetter];
+            
+            // 計算需要調整的半音差距
+            // 使用 (target - base + 12) % 12 來處理跨八度的情況
+            const diff = (targetSemitone - baseSemitone + 12) % 12;
+            
+            // 根據半音差距生成相應的修飾符
+            if (diff === 0) {
+                return ''; // 不需要修飾符
+            } else if (diff <= 6) {
+                // 如果差距在6個半音以內，使用升記號
+                // 例如：diff=2 會產生 "##"
+                return '#'.repeat(diff);
+            } else {
+                // 如果差距超過6個半音，使用降記號會比較簡潔
+                // 例如：diff=10 相當於降2個半音，會產生 "bb"
+                return 'b'.repeat(12 - diff);
+            }
+        }
+        
+        // ===== 單一音名移調函數 =====
+        
+        /**
+         * 對單一音名進行移調
+         * @param {string} noteStr - 原始音名字串
+         * @param {number} semitones - 移調的半音數
+         * @param {string} intervalType - 音程類型
+         * @param {number} direction - 移調方向（1=向上，-1=向下）
+         * @returns {string} - 移調後的音名字串
+         */
+        function transposeNote(noteStr, semitones, intervalType, direction) {
+            // 解析原始音名
+            const parsed = parseNote(noteStr);
+            if (!parsed) return noteStr; // 如果解析失敗，回傳原字串
+            
+            // 根據音程類型和方向計算目標字母
+            const targetLetter = getTargetLetter(parsed.letter, intervalType, direction);
+            
+            // 計算目標半音數值
+            // 原始半音數 + 移調半音數，並確保結果在 0-11 範圍內
+            const targetSemitone = (parsed.semitone + semitones + 12) % 12;
+            
+            // 計算目標字母需要的修飾符
+            const modifier = calculateModifier(targetLetter, targetSemitone);
+            
+            // 組合目標字母和修飾符，回傳移調結果
+            return targetLetter + modifier;
+        }
+        
+        // ===== 文字移調函數 =====
+        
+        /**
+         * 在文字中尋找音名並進行移調，其他文字保持不變
+         * @param {string} text - 包含音名的原始文字
+         * @param {number} semitones - 移調的半音數
+         * @param {string} intervalType - 音程類型
+         * @param {number} direction - 移調方向
+         * @returns {string} - 移調後的文字
+         */
+        function transposeText(text, semitones, intervalType, direction) {
+            // 正規表達式：匹配音名模式
+            // ([A-G]) - 捕獲一個大寫字母 A-G 作為音名字母
+            // (x|[#b]*)? - 可選的修飾符，可以是 x 或任意數量的 # 和 b
+            const noteRegex = /([A-G])(x|[#b]*)?/g;
+            
+            // 使用 replace 方法對所有匹配的音名進行移調
+            return text.replace(noteRegex, (match, letter, modifier) => {
+                // 重建完整的音名字串
+                const noteStr = letter + (modifier || '');
+                // 對這個音名進行移調
+                return transposeNote(noteStr, semitones, intervalType, direction);
+            });
+        }
+        
+        // ===== 主要移調執行函數 =====
+        
+        /**
+         * 執行移調操作的主函數，從輸入框讀取文字並輸出移調結果
+         * @param {number} semitones - 移調的半音數
+         * @param {string} intervalType - 音程類型字串
+         */
+        function transpose(semitones, intervalType) {
+            // 從輸入文字框取得原始文字
+            const input = document.getElementById('input').value;
+            
+            // 判斷移調方向：正數為向上，負數為向下
+            const direction = semitones > 0 ? 1 : -1;
+            
+            // 執行文字移調
+            const result = transposeText(input, semitones, intervalType, direction);
+            
+            // 將結果顯示在輸出文字框
+            document.getElementById('output').value = result;
+        }
+        
+        // ===== 事件監聽器設定 =====
+        
+        // 當輸入文字框內容改變時，清空輸出文字框
+        // 這樣使用者就知道需要重新點擊按鈕來進行移調
+        document.getElementById('input').addEventListener('input', () => {
+            document.getElementById('output').value = '';
+        });
+    </script>
+</body>
+</html>
